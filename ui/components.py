@@ -57,32 +57,49 @@ def create_floating_back_button(text: str = "", parent=None) -> QPushButton:
         Configured QPushButton
     """
     button = QPushButton(text, parent)
-    # Create colored icon from SVG
-    icon = create_colored_icon("resources/left_arrow.svg", COLORS['highlight'], 24)
-    button.setIcon(icon)
+    # Create two different colored icons for normal and hover states
+    orange_icon = create_colored_icon("resources/left_arrow.svg", "#ff6b35", 24)
+    bg_icon = create_colored_icon("resources/left_arrow.svg", COLORS['bg_soft'], 24)
+    
+    button.setIcon(orange_icon)
     button.setIconSize(button.size())
+    
+    # Store both icons as button properties for hover switching
+    button.orange_icon = orange_icon
+    button.bg_icon = bg_icon
+    
+    # Override enter and leave events to switch icons
+    def on_enter(event):
+        button.setIcon(button.bg_icon)
+        
+    def on_leave(event):
+        button.setIcon(button.orange_icon)
+        
+    button.enterEvent = on_enter
+    button.leaveEvent = on_leave
     button.setStyleSheet(
         f"""
         QPushButton {{
             font-family: {FONT_FAMILY};
             font-size: 16px;
             font-weight: bold;
-            color: {COLORS['fg']};
-            background-color: {COLORS['bg_hard']};
-            border: 2px solid {COLORS['fg_dim']};
+            color: #ff6b35;
+            background-color: transparent;
+            border: none;
             border-radius: 20px;
             padding: 8px 16px;
             min-width: 60px;
             min-height: 40px;
         }}
         QPushButton:hover {{
-            background-color: {COLORS['fg_dim']};
-            color: {COLORS['bg_hard']};
-            border-color: {COLORS['highlight']};
+            background-color: #ff6b35;
+            color: {COLORS['bg_soft']};
+            border: 2px solid #ff6b35;
         }}
         QPushButton:pressed {{
-            background-color: {COLORS['highlight']};
-            color: {COLORS['bg_hard']};
+            background-color: #e55a2b;
+            color: {COLORS['bg_soft']};
+            border: 2px solid #e55a2b;
         }}
         """
     )

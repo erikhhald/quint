@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from sqlalchemy import and_
@@ -8,7 +8,7 @@ from .models import Card, Deck
 
 
 def get_today_end():
-    return datetime.now(datetime.timezone.utc).replace(
+    return datetime.now(timezone.utc).replace(
         hour=23, minute=59, second=59, microsecond=999999
     )
 

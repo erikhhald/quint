@@ -1,9 +1,11 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QColor, QIcon
 from PyQt5.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
+    QInputDialog,
     QLabel,
+    QMessageBox,
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
@@ -13,7 +15,7 @@ from PyQt5.QtWidgets import (
 
 from database import services
 
-from ..components import create_back_button, create_title_label
+from ..components import create_back_button, create_colored_icon, create_title_label
 from ..theme import COLORS, FONT_FAMILY
 
 
@@ -33,8 +35,8 @@ class DecksPage(QWidget):
 
         table = QTableWidget()
         table.setRowCount(len(deck_data))
-        table.setColumnCount(3)
-        table.setHorizontalHeaderLabels(["Deck", "New", "Due"])
+        table.setColumnCount(4)
+        table.setHorizontalHeaderLabels(["Deck", "New", "Due", ""])
 
         # Left-align the "Deck" header
         table.horizontalHeaderItem(0).setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
@@ -48,8 +50,8 @@ class DecksPage(QWidget):
         table.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         table.setSizePolicy(table.sizePolicy().Minimum, table.sizePolicy().Minimum)
 
-        # Enable full row selection
-        table.setSelectionBehavior(table.SelectRows)
+        # Disable selection
+        table.setSelectionMode(QTableWidget.NoSelection)
         table.setMouseTracking(True)
 
         # Style the table with alternating row colors
@@ -59,32 +61,29 @@ class DecksPage(QWidget):
                 background-color: {COLORS['bg_soft']};
                 color: {COLORS['fg']};
                 font-family: {FONT_FAMILY};
-                font-size: 18px;
+                font-size: 32px;
                 border: none;
                 outline: none;
                 gridline-color: {COLORS['fg_dim']};
             }}
             QHeaderView::section {{
-                background-color: {COLORS['bg_hard']};
-                color: {COLORS['fg']};
+                background-color: {COLORS['bg_soft']};
+                color: #ff6b35;
                 font-family: {FONT_FAMILY};
                 font-weight: bold;
-                font-size: 16px;
+                font-size: 32px;
                 border: none;
+                border-bottom: 2px solid {COLORS['bg_hard']};
                 padding: 12px 8px;
                 text-align: left;
             }}
             QTableWidget::item {{
-                padding: 12px 8px;
+                padding: 10px 10px;
                 border: none;
-                border-bottom: 1px solid {COLORS['bg_hard']};
-            }}
-            QTableWidget::item:hover {{
-                background-color: {COLORS['bg_hard']};
             }}
             QTableWidget::item:selected {{
-                background-color: {COLORS['bg_hard']};
-                color: {COLORS['highlight']};
+                background-color: transparent;
+                color: inherit;
             }}
         """
         )
@@ -97,26 +96,47 @@ class DecksPage(QWidget):
 
             new_item = QTableWidgetItem(str(data["new"]))
             new_item.setTextAlignment(Qt.AlignCenter)
-            # Color new count orange if there are new cards
+            new_item.setFlags(
+                new_item.flags() & ~Qt.ItemIsSelectable
+            )  # Disable selection/hover
+            # Color new count blue if there are new cards
             if data["new"] > 0:
-                new_item.setStyleSheet(f"color: #ff6b35; font-weight: bold;")
+                new_item.setForeground(QColor(COLORS["new_blue"]))
+            else:
+                new_item.setForeground(QColor(COLORS["fg_faded"]))
+
             table.setItem(row, 1, new_item)
 
             due_item = QTableWidgetItem(str(data["due"]))
             due_item.setTextAlignment(Qt.AlignCenter)
-            # Color due count orange if there are due cards
+            due_item.setFlags(
+                due_item.flags() & ~Qt.ItemIsSelectable
+            )  # Disable selection/hover
+            # Color due count yellow if there are due cards
             if data["due"] > 0:
-                due_item.setStyleSheet(f"color: #ff6b35; font-weight: bold;")
+                due_item.setForeground(QColor(COLORS["due_yellow"]))
+            else:
+                due_item.setForeground(QColor(COLORS["fg_faded"]))
+
             table.setItem(row, 2, due_item)
+
+            # Add gear icon in the rightmost column
+            gear_item = QTableWidgetItem("")
+            gear_item.setTextAlignment(Qt.AlignCenter)
+            # Create gear icon for this cell
+            gear_icon = create_colored_icon("resources/gear.svg", COLORS["fg"], 32)
+            gear_item.setIcon(gear_icon)
+            table.setItem(row, 3, gear_item)
 
         # Auto-resize columns to content
         table.resizeColumnsToContents()
         table.resizeRowsToContents()
 
         # Set column widths (make wider)
-        table.setColumnWidth(0, max(table.columnWidth(0), 400))
-        table.setColumnWidth(1, max(table.columnWidth(1), 80))
-        table.setColumnWidth(2, max(table.columnWidth(2), 80))
+        table.setColumnWidth(0, max(table.columnWidth(0), 600))
+        table.setColumnWidth(1, max(table.columnWidth(1), 120))
+        table.setColumnWidth(2, max(table.columnWidth(2), 120))
+        table.setColumnWidth(3, 100)  # Fixed width for gear icon column
 
         # Resize table to fit contents exactly
         table.setFixedSize(
@@ -132,32 +152,26 @@ class DecksPage(QWidget):
         table_layout = QVBoxLayout(table_container)
         table_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Header aligned with table
-        header_layout = QHBoxLayout()
-        header_layout.setContentsMargins(0, 0, 0, 10)
+        # Add table to container
+        table_layout.addWidget(table)
 
-        # Deck label (left aligned with table)
-        deck_label = QLabel("Decks")
-        deck_label.setStyleSheet(
-            f"font-family: {FONT_FAMILY}; font-size: 32px; color: {COLORS['fg']}; font-weight: bold;"
-        )
-        header_layout.addWidget(deck_label)
+        # Add button below table
+        button_layout = QHBoxLayout()
+        button_layout.setContentsMargins(0, 10, 0, 0)
+        # Button will be flush with left side of table
 
-        # Spacer
-        header_layout.addStretch()
-
-        # New deck button (right aligned with table)
+        # New deck button (smaller, below table)
         new_deck_btn = QPushButton("+", self)
+        new_deck_btn.setFixedSize(80, 50)  # 1.5 x height ratio
         new_deck_btn.setStyleSheet(
             f"""
             QPushButton {{
                 font-family: {FONT_FAMILY};
-                font-size: 32px;
+                font-size: 24px;
                 color: white;
                 background-color: #ff6b35;
                 border: none;
                 border-radius: 8px;
-                padding: 8px 16px;
             }}
             QPushButton:hover {{
                 background-color: #e55a2b;
@@ -168,11 +182,10 @@ class DecksPage(QWidget):
             """
         )
         new_deck_btn.clicked.connect(self.on_new_deck_clicked)
-        header_layout.addWidget(new_deck_btn)
+        button_layout.addWidget(new_deck_btn)
+        button_layout.addStretch()  # Push everything else to the right
 
-        # Add header and table to container
-        table_layout.addLayout(header_layout)
-        table_layout.addWidget(table)
+        table_layout.addLayout(button_layout)
 
         # Center the entire container
         layout.addWidget(table_container, alignment=Qt.AlignCenter)
@@ -189,7 +202,85 @@ class DecksPage(QWidget):
         self.parent().setCurrentIndex(0)
 
     def on_new_deck_clicked(self):
-        print("New deck button clicked")  # Placeholder
+        """Handle new deck button click - prompt for deck name."""
+        deck_name, ok = QInputDialog.getText(
+            self, "New Deck", "Enter deck name:", text="My New Deck"
+        )
+
+        if ok and deck_name.strip():
+            try:
+                # Create the new deck in database
+                deck_id = services.create_deck(deck_name.strip())
+                if deck_id:
+                    QMessageBox.information(
+                        self, "Success", f'Deck "{deck_name}" created successfully!'
+                    )
+                    # Refresh the page to show the new deck
+                    self._refresh_deck_list()
+                else:
+                    QMessageBox.warning(
+                        self, "Error", "Failed to create deck. Please try again."
+                    )
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"Error creating deck: {str(e)}")
+        elif ok:  # User clicked OK but entered empty name
+            QMessageBox.warning(self, "Invalid Name", "Deck name cannot be empty.")
+
+    def _refresh_deck_list(self):
+        """Refresh the deck table with latest data."""
+        # Get updated deck data
+        deck_data = services.get_all_deck_stats()
+        self.deck_data = deck_data
+
+        # Find the table widget and update it
+        for widget in self.findChildren(QTableWidget):
+            # Clear and repopulate table
+            widget.setRowCount(len(deck_data))
+            widget.setColumnCount(4)
+
+            special_decks = ["Art History", "Biology - Cell Structure"]
+
+            for row, data in enumerate(deck_data):
+                deck_item = QTableWidgetItem(data["name"])
+                deck_item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+
+                if data["name"] in special_decks:
+                    deck_item.setForeground(QColor("#ff6b35"))
+
+                widget.setItem(row, 0, deck_item)
+
+                new_item = QTableWidgetItem(str(data["new"]))
+                new_item.setTextAlignment(Qt.AlignCenter)
+                new_item.setFlags(
+                    new_item.flags() & ~Qt.ItemIsSelectable
+                )  # Disable selection/hover
+                if data["new"] > 0:
+                    new_item.setForeground(QColor(COLORS["new_blue"]))
+                else:
+                    new_item.setForeground(QColor(COLORS["fg_faded"]))
+                widget.setItem(row, 1, new_item)
+
+                due_item = QTableWidgetItem(str(data["due"]))
+                due_item.setTextAlignment(Qt.AlignCenter)
+                due_item.setFlags(
+                    due_item.flags() & ~Qt.ItemIsSelectable
+                )  # Disable selection/hover
+                if data["due"] > 0:
+                    due_item.setForeground(QColor(COLORS["due_yellow"]))
+                else:
+                    due_item.setForeground(QColor(COLORS["fg_faded"]))
+                widget.setItem(row, 2, due_item)
+
+                # Add gear icon in the rightmost column
+                gear_item = QTableWidgetItem("")
+                gear_item.setTextAlignment(Qt.AlignCenter)
+                gear_icon = create_colored_icon(
+                    "resources/gear.svg", COLORS["fg_dim"], 20
+                )
+                gear_item.setIcon(gear_icon)
+                widget.setItem(row, 3, gear_item)
+
+            break
 
     def on_deck_clicked(self, row, column):
         # Get the deck data from the clicked row
