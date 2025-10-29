@@ -1,7 +1,7 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit
 from ..components import create_navigation_back_button
-from ..theme import COLORS
+from ..theme import COLORS, FONT_FAMILY
 
 class ChatPage(QWidget):
     def __init__(self):
@@ -17,7 +17,7 @@ class ChatPage(QWidget):
         self.title = QLabel("Chat", self)
         self.title.setAlignment(Qt.AlignCenter)
         self.title.setStyleSheet(
-            f"font-family: monospace; font-size: 36px; color: {COLORS['fg']}; margin-bottom: 20px;"
+            f"font-family: {FONT_FAMILY}; font-size: 36px; color: {COLORS['fg']}; margin-bottom: 20px;"
         )
         layout.addWidget(self.title)
 
@@ -32,7 +32,7 @@ class ChatPage(QWidget):
         self.chat_input.setStyleSheet(
             f"""
             QLineEdit {{
-                font-family: monospace;
+                font-family: {FONT_FAMILY};
                 font-size: 32px;
                 color: {COLORS['fg']};
                 background-color: {COLORS['bg_hard']};
@@ -55,7 +55,7 @@ class ChatPage(QWidget):
         send_btn.setStyleSheet(
             f"""
             QPushButton {{
-                font-family: monospace;
+                font-family: {FONT_FAMILY};
                 font-size: 32px;
                 color: {COLORS['bg_hard']};
                 background-color: {COLORS['highlight']};

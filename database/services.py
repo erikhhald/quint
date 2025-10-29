@@ -1,8 +1,3 @@
-"""
-Database service functions for querying and managing flashcard data.
-Functional programming approach.
-"""
-
 from datetime import datetime
 from typing import List, Optional
 
@@ -12,9 +7,10 @@ from .connection import db
 from .models import Card, Deck
 
 
-def get_today_end() -> datetime:
-    """Get end of today timestamp."""
-    return datetime.utcnow().replace(hour=23, minute=59, second=59, microsecond=999999)
+def get_today_end():
+    return datetime.now(datetime.timezone.utc).replace(
+        hour=23, minute=59, second=59, microsecond=999999
+    )
 
 
 def get_cards_due_today(deck_id: int) -> List[Card]:

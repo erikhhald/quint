@@ -7,7 +7,7 @@ from PyQt5.QtGui import QIcon, QPixmap, QPainter, QColor
 from PyQt5.QtSvg import QSvgRenderer
 from PyQt5.QtWidgets import QPushButton
 
-from .theme import COLORS
+from .theme import COLORS, FONT_FAMILY
 
 
 def create_colored_icon(svg_path: str, color: str, size: int = 24) -> QIcon:
@@ -64,7 +64,7 @@ def create_floating_back_button(text: str = "", parent=None) -> QPushButton:
     button.setStyleSheet(
         f"""
         QPushButton {{
-            font-family: monospace;
+            font-family: {FONT_FAMILY};
             font-size: 16px;
             font-weight: bold;
             color: {COLORS['fg']};

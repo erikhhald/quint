@@ -3,7 +3,7 @@ from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QLabel, QPushButton, QVBoxLayout, QWidget
 
 from ..components import create_colored_icon
-from ..theme import COLORS
+from ..theme import COLORS, FONT_FAMILY
 
 with open("resources/logo.txt", "r") as f:
     LOGO_CONTENT = f.read()
@@ -20,7 +20,7 @@ class MenuPage(QWidget):
         label = QLabel(LOGO_CONTENT, self)
         label.setAlignment(Qt.AlignLeft)
         label.setStyleSheet(
-            f"font-family: monospace; font-size: 30px; color: {COLORS['fg']};"
+            f"font-family: {FONT_FAMILY}; font-size: 30px; color: {COLORS['fg']};"
         )
 
         layout.addWidget(label)
@@ -31,7 +31,7 @@ class MenuPage(QWidget):
             btn.setStyleSheet(
                 f"""
                 QPushButton {{
-                    font-family: monospace; 
+                    font-family: {FONT_FAMILY}; 
                     font-size: 30px; 
                     color: {COLORS['fg']}; 
                     background-color: transparent; 
