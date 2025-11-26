@@ -1,28 +1,28 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QLineEdit
+
 from ..components import create_navigation_back_button
+from ..template import GenericPage
 from ..theme import COLORS, FONT_FAMILY
 
-class ChatPage(QWidget):
+
+class ChatPage(GenericPage):
     def __init__(self):
         super().__init__()
-        self.setStyleSheet(f"background-color: {COLORS['bg_soft']};")
 
-        layout = QVBoxLayout()
-
-        # Floating back button
-        back_btn = create_navigation_back_button(parent=self)
-        back_btn.clicked.connect(self.on_back_clicked)
+        # Override the back button with navigation back button and custom behavior
+        self.back_btn.clicked.disconnect()  # Remove default behavior
+        self.back_btn.clicked.connect(self.on_back_clicked)
 
         self.title = QLabel("Chat", self)
         self.title.setAlignment(Qt.AlignCenter)
         self.title.setStyleSheet(
             f"font-family: {FONT_FAMILY}; font-size: 36px; color: {COLORS['fg']}; margin-bottom: 20px;"
         )
-        layout.addWidget(self.title)
+        self.add_widget(self.title)
 
         # Add spacer to push input to bottom
-        layout.addStretch()
+        self.add_stretch()
 
         # Chat input area
         input_layout = QHBoxLayout()
@@ -74,9 +74,7 @@ class ChatPage(QWidget):
         input_layout.addWidget(self.chat_input)
         input_layout.addWidget(send_btn)
 
-        layout.addLayout(input_layout)
-
-        self.setLayout(layout)
+        self.add_layout(input_layout)
 
     def set_deck(self, deck_name, deck_id=None):
         if deck_id:

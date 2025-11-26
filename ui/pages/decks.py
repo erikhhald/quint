@@ -15,17 +15,14 @@ from PyQt5.QtWidgets import (
 
 from database import services
 
-from ..components import create_back_button, create_colored_icon, create_title_label
+from ..components import create_colored_icon
+from ..template import GenericPage
 from ..theme import COLORS, FONT_FAMILY
 
 
-class DecksPage(QWidget):
+class DecksPage(GenericPage):
     def __init__(self):
         super().__init__()
-        self.setStyleSheet(f"background-color: {COLORS['bg_soft']};")
-
-        layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignTop)
 
         # Get deck data from database
         deck_data = services.get_all_deck_stats()
@@ -188,18 +185,8 @@ class DecksPage(QWidget):
         table_layout.addLayout(button_layout)
 
         # Center the entire container
-        layout.addWidget(table_container, alignment=Qt.AlignCenter)
+        self.add_widget(table_container, alignment=Qt.AlignCenter)
 
-        self.setLayout(layout)
-
-        # Create floating back button AFTER layout is set to ensure it's on top
-        back_btn = create_back_button(parent=self)
-        back_btn.clicked.connect(self.on_back_clicked)
-        # Force the button to stay on top
-        back_btn.raise_()
-
-    def on_back_clicked(self):
-        self.parent().setCurrentIndex(0)
 
     def on_new_deck_clicked(self):
         """Handle new deck button click - prompt for deck name."""

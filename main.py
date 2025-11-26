@@ -2,7 +2,7 @@
 import sys
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QFontDatabase
-from ui.main_window import MainApp
+from ui.pages.main_window import MainApp
 
 def load_fonts():
     """Load custom fonts for the application."""

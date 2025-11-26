@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Float, Integer, String, Text
+from sqlalchemy import JSON, Column, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -46,12 +46,44 @@ class Card(Base):
     last_review = Column(DateTime)  # Timestamp of last review
 
 
-class ChatMessage(Base):
-    __tablename__ = "chat_messages"
+class Message(Base):
+    __tablename__ = "messages"
 
     id = Column(Integer, primary_key=True)
-    deck_id = Column(Integer, nullable=False)
+    review_id = Column(Integer, nullable=False)
     message = Column(Text, nullable=False)
     response = Column(Text)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
+
+class Review(Base):
+    __tablename__ = "reviews"
+
+    id = Column(Integer, primary_key=True)
+
+    card_id = Column(Integer, ForeignKey("cards.id"), nullable=False, index=True)
+
+    reviewed_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    # Rating / button pressed, e.g. 0=Again, 1=Hard, 2=Good, 3=Easy
+    rating = Column(Integer, nullable=False)
+
+    # Optional: response time in ms
+    response_ms = Column(Integer)
+
+    # Snapshot of scheduling state around the review
+    state_before = Column(Integer)  # 0=New,1=Learning,2=Review,3=Relearning
+    state_after = Column(Integer)
+
+    scheduled_days_before = Column(Integer)
+    scheduled_days_after = Column(Integer)
+
+    elapsed_days = Column(Integer)  # days since last_review at the moment of answering
+
+    stability_before = Column(Float)
+    stability_after = Column(Float)
+    difficulty_before = Column(Float)
+    difficulty_after = Column(Float)
+
+    # Which scheduler produced this review's decision ("fsrs", "sm2", "ebisu", etc.)
+    algorithm = Column(String(32))

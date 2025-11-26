@@ -1,16 +1,21 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QStackedWidget, QApplication
-from .theme import COLORS
-from .pages.menu import MenuPage
-from .pages.decks import DecksPage
-from .pages.chat import ChatPage
-from .pages.stats import StatsPage
-from .pages.settings import SettingsPage
+from PyQt5.QtWidgets import QVBoxLayout, QStackedWidget, QApplication
+from PyQt5.QtCore import Qt
+from ..template import GenericPage
+from ..theme import COLORS
+from .menu import MenuPage
+from .decks import DecksPage
+from .chat import ChatPage
+from .stats import StatsPage
+from .settings import SettingsPage
 
-class MainApp(QWidget):
+class MainApp(GenericPage):
     def __init__(self):
         super().__init__()
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowCloseButtonHint)
         self.setWindowTitle("Quint")
-        self.setStyleSheet(f"background-color: {COLORS['bg_soft']};")
+        
+        # Hide the back button since this is the main window
+        self.back_btn.hide()
 
         self.stacked_widget = QStackedWidget()
 
@@ -26,9 +31,7 @@ class MainApp(QWidget):
         self.stacked_widget.addWidget(self.settings_page)
         self.stacked_widget.addWidget(self.chat_page)
 
-        main_layout = QVBoxLayout()
-        main_layout.addWidget(self.stacked_widget)
-        self.setLayout(main_layout)
+        self.add_widget(self.stacked_widget)
 
         # Set window size to 1600x1200 or fullscreen if monitor is smaller
         self.setMinimumSize(1600, 1200)
