@@ -1,10 +1,14 @@
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import List, Optional
 
 from sqlalchemy import and_
 
-from .connection import db
+from settings.settings import settings
+
+from .database import db
 from .models import Card, Deck
+from .utilities import write_to_managed_store
 
 
 def get_today_end():
@@ -165,3 +169,59 @@ def get_all_decks() -> List[Deck]:
         List of all Deck objects
     """
     return db.session.query(Deck).order_by(Deck.name).all()
+
+
+def create_card(file_path, deck_id, copy=True):
+    """
+    Create a new card from a file.
+
+    Args:
+        file_path: Path to the source file
+        deck_id: ID of the deck to add the card to
+        copy: Whether to copy the file (default True)
+
+    Returns:
+        Created Card object
+
+    """
+    source_path = Path(file_path)
+    if not source_path.exists():
+        raise FileNotFoundError(f"File not found: {file_path}")
+
+    deck = get_deck_by_id(deck_id)
+    if not deck:
+        raise ValueError(f"Deck not found: {deck_id}")
+
+    if copy:
+        # Read file data and write to managed store
+        try:
+            data = source_path.read_bytes()
+        except Exception as e:
+            raise IOError(f"Failed to read file: {e}")
+
+        final_path = write_to_managed_store(data, deck.name, str(source_path))
+    else:
+        # Use original path
+        final_path = str(source_path)
+
+    # Get filesystem metadata
+    final_path_obj = Path(final_path)
+    stat_info = final_path_obj.stat()
+
+    # Get device and inode info
+    fs_dev = str(stat_info.st_dev)
+    fs_inode = str(stat_info.st_ino)
+
+    # Create card with defaults
+    card = Card(
+        deck_id=deck_id,
+        path=final_path,
+        fs_dev=fs_dev,
+        fs_inode=fs_inode,
+        is_external=not copy,
+    )
+
+    db.session.add(card)
+    db.session.commit()
+
+    return card

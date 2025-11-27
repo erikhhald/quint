@@ -1,7 +1,18 @@
 from datetime import datetime
 
-from sqlalchemy import JSON, Column, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import object_session, relationship
 
 Base = declarative_base()
 
@@ -28,9 +39,13 @@ class Card(Base):
 
     id = Column(Integer, primary_key=True)
     deck_id = Column(Integer, nullable=False)
-    front = Column(Text, nullable=False)
-    back = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    # File system tracking
+    path = Column(String(500), nullable=False)  # Filepath to the card content
+    fs_dev = Column(Text)  # device id (or volume id)
+    fs_inode = Column(Text)  # inode or file index
+    is_external = Column(Boolean, default=False)
 
     # FSRS core scheduling parameters
     due = Column(DateTime, default=datetime.utcnow)  # When the card is due for review
@@ -38,22 +53,55 @@ class Card(Base):
     difficulty = Column(Float, default=0.0)  # Memory difficulty (D)
     elapsed_days = Column(Integer, default=0)  # Days since last review
     scheduled_days = Column(Integer, default=0)  # Scheduled interval
-    reps = Column(Integer, default=0)  # Number of reviews
-    lapses = Column(Integer, default=0)  # Number of lapses (forgetting events)
     state = Column(
         Integer, default=0
     )  # Card state: 0=New, 1=Learning, 2=Review, 3=Relearning
-    last_review = Column(DateTime)  # Timestamp of last review
 
+    # anki scheduling parameters
+    anki_difficulty = Column(Float, default=2.5)  # SM2 easiness factor (difficulty)
 
-class Message(Base):
-    __tablename__ = "messages"
+    # Relationships
+    reviews = relationship("Review", back_populates="card")
 
-    id = Column(Integer, primary_key=True)
-    review_id = Column(Integer, nullable=False)
-    message = Column(Text, nullable=False)
-    response = Column(Text)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    @property
+    def reps(self):
+        """Number of reviews for this card."""
+        session = object_session(self)
+        if session is None:
+            return 0
+        return (
+            session.query(func.count(Review.id))
+            .filter(Review.card_id == self.id)
+            .scalar()
+            or 0
+        )
+
+    @property
+    def lapses(self):
+        """Number of lapses (ratings of 0=Again) for this card."""
+        session = object_session(self)
+        if session is None:
+            return 0
+        return (
+            session.query(func.count(Review.id))
+            .filter(Review.card_id == self.id, Review.rating == 0)
+            .scalar()
+            or 0
+        )
+
+    @property
+    def last_review(self):
+        """Timestamp of the most recent review."""
+        session = object_session(self)
+        if session is None:
+            return None
+        latest_review = (
+            session.query(Review.reviewed_at)
+            .filter(Review.card_id == self.id)
+            .order_by(Review.reviewed_at.desc())
+            .first()
+        )
+        return latest_review[0] if latest_review else None
 
 
 class Review(Base):
@@ -68,7 +116,6 @@ class Review(Base):
     # Rating / button pressed, e.g. 0=Again, 1=Hard, 2=Good, 3=Easy
     rating = Column(Integer, nullable=False)
 
-    # Optional: response time in ms
     response_ms = Column(Integer)
 
     # Snapshot of scheduling state around the review
@@ -87,3 +134,16 @@ class Review(Base):
 
     # Which scheduler produced this review's decision ("fsrs", "sm2", "ebisu", etc.)
     algorithm = Column(String(32))
+
+    # Relationships
+    card = relationship("Card", back_populates="reviews")
+
+
+class Message(Base):
+    __tablename__ = "messages"
+
+    id = Column(Integer, primary_key=True)
+    review_id = Column(Integer, nullable=False)
+    message = Column(Text, nullable=False)
+    response = Column(Text)
+    timestamp = Column(DateTime, default=datetime.utcnow)

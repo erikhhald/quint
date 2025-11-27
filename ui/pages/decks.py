@@ -1,10 +1,8 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor, QIcon
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import (
     QHBoxLayout,
-    QHeaderView,
     QInputDialog,
-    QLabel,
     QMessageBox,
     QPushButton,
     QTableWidget,
@@ -186,7 +184,6 @@ class DecksPage(GenericPage):
 
         # Center the entire container
         self.add_widget(table_container, alignment=Qt.AlignCenter)
-
 
     def on_new_deck_clicked(self):
         """Handle new deck button click - prompt for deck name."""

@@ -24,6 +24,10 @@ class Settings:
             "documents_path": str(Path.home() / "Documents" / "Quint"),
             "algorithm": "FSRS",
             "openai_api_key": "",
+            "window_width": 1600,
+            "window_height": 1200,
+            "window_x": -1,
+            "window_y": -1,
         }
 
         self._load_settings()
@@ -80,6 +84,38 @@ class Settings:
     @openai_api_key.setter
     def openai_api_key(self, value: str) -> None:
         self.set("openai_api_key", value)
+
+    @property
+    def window_width(self) -> int:
+        return self.get("window_width", 1600)
+
+    @window_width.setter
+    def window_width(self, value: int) -> None:
+        self.set("window_width", value)
+
+    @property
+    def window_height(self) -> int:
+        return self.get("window_height", 1200)
+
+    @window_height.setter
+    def window_height(self, value: int) -> None:
+        self.set("window_height", value)
+
+    @property
+    def window_x(self) -> int:
+        return self.get("window_x", -1)
+
+    @window_x.setter
+    def window_x(self, value: int) -> None:
+        self.set("window_x", value)
+
+    @property
+    def window_y(self) -> int:
+        return self.get("window_y", -1)
+
+    @window_y.setter
+    def window_y(self, value: int) -> None:
+        self.set("window_y", value)
 
 
 # Global settings instance

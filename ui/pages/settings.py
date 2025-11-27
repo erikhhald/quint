@@ -15,7 +15,7 @@ from settings.settings import settings
 
 class SettingsPage(GenericPage):
     def __init__(self):
-        super().__init__(title="Settings", icon_path="resources/gear.svg")
+        super().__init__()
 
         # Settings form
         form_layout = QFormLayout()

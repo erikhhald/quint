@@ -1,5 +1,6 @@
-from .connection import db
-from .models import Deck, Card, ChatMessage, Base
 from . import services
+from .database import db
+from .models import Base, Card, Deck, Message
 
-__all__ = ['db', 'Deck', 'Card', 'ChatMessage', 'Base', 'services']
+__all__ = ["db", "Deck", "Card", "Message", "Base", "services"]
+
