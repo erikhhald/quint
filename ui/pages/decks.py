@@ -1,5 +1,5 @@
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import QColor, QShowEvent
 from PyQt5.QtWidgets import (
     QHBoxLayout,
     QInputDialog,
@@ -28,7 +28,9 @@ class DecksPage(GenericPage):
         # Store deck data for access in click handler
         self.deck_data = deck_data
 
-        table = QTableWidget()
+        # Store reference to table for live updates
+        self.table = QTableWidget()
+        table = self.table
         table.setRowCount(len(deck_data))
         table.setColumnCount(4)
         table.setHorizontalHeaderLabels(["Deck", "New", "Due", ""])
@@ -184,6 +186,62 @@ class DecksPage(GenericPage):
 
         # Center the entire container
         self.add_widget(table_container, alignment=Qt.AlignCenter)
+
+        # Set up timer for live updates
+        self.update_timer = QTimer()
+        self.update_timer.timeout.connect(self.update_live_counts)
+        self.update_timer.start(2000)  # Update every 2 seconds
+
+    def showEvent(self, event: QShowEvent):
+        """Override showEvent to update deck counts when page comes into focus."""
+        super().showEvent(event)
+        # Force immediate update when page becomes visible
+        self.update_live_counts()
+
+    def update_live_counts(self):
+        """Update deck counts in real-time without recreating the table."""
+        try:
+            # Get fresh data from database
+            fresh_deck_data = services.get_all_deck_stats()
+            
+            # Only update if data structure hasn't changed (same decks exist)
+            if len(fresh_deck_data) != len(self.deck_data):
+                # Structure changed, do full refresh
+                self._refresh_deck_list()
+                return
+            
+            # Update counts for existing decks
+            for row, (old_data, new_data) in enumerate(zip(self.deck_data, fresh_deck_data)):
+                # Skip if deck names don't match (order changed)
+                if old_data["name"] != new_data["name"]:
+                    self._refresh_deck_list()
+                    return
+                
+                # Update New count if changed
+                if old_data["new"] != new_data["new"]:
+                    new_item = self.table.item(row, 1)
+                    new_item.setText(str(new_data["new"]))
+                    if new_data["new"] > 0:
+                        new_item.setForeground(QColor(COLORS["new_blue"]))
+                    else:
+                        new_item.setForeground(QColor(COLORS["fg_faded"]))
+                
+                # Update Due count if changed
+                if old_data["due"] != new_data["due"]:
+                    due_item = self.table.item(row, 2)
+                    due_item.setText(str(new_data["due"]))
+                    if new_data["due"] > 0:
+                        due_item.setForeground(QColor(COLORS["due_yellow"]))
+                    else:
+                        due_item.setForeground(QColor(COLORS["fg_faded"]))
+            
+            # Update stored data
+            self.deck_data = fresh_deck_data
+            
+        except Exception as e:
+            # If there's an error, fall back to full refresh
+            print(f"Live update error: {e}")
+            self._refresh_deck_list()
 
     def on_new_deck_clicked(self):
         """Handle new deck button click - prompt for deck name."""

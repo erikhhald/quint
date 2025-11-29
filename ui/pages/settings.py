@@ -6,10 +6,11 @@ from PyQt5.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QWidget,
 )
 
 from ..template import GenericPage
-from ..theme import COLORS, FONT_FAMILY
+from ..theme import COLORS, FONT_FAMILY, DEFAULT_FONT_SIZE
 from settings.settings import settings
 
 
@@ -17,6 +18,10 @@ class SettingsPage(GenericPage):
     def __init__(self):
         super().__init__()
 
+        # Add top margin to start below back button like in chat page
+        form_container = QHBoxLayout()
+        form_container.setContentsMargins(20, 110, 20, 20)
+        
         # Settings form
         form_layout = QFormLayout()
         form_layout.setSpacing(20)
@@ -29,7 +34,7 @@ class SettingsPage(GenericPage):
             f"""
             QLineEdit {{
                 font-family: {FONT_FAMILY};
-                font-size: 16px;
+                font-size: {DEFAULT_FONT_SIZE}px;
                 color: {COLORS['fg']};
                 background-color: {COLORS['bg_hard']};
                 border: 2px solid {COLORS['fg_faded']};
@@ -48,7 +53,7 @@ class SettingsPage(GenericPage):
             f"""
             QLabel {{
                 font-family: {FONT_FAMILY};
-                font-size: 16px;
+                font-size: {DEFAULT_FONT_SIZE}px;
                 color: {COLORS['fg']};
                 font-weight: bold;
             }}
@@ -66,7 +71,7 @@ class SettingsPage(GenericPage):
             f"""
             QPushButton {{
                 font-family: {FONT_FAMILY};
-                font-size: 18px;
+                font-size: {DEFAULT_FONT_SIZE}px;
                 color: {COLORS['fg']};
                 background-color: {COLORS['bg_hard']};
                 border: 2px solid {COLORS['fg_faded']};
@@ -94,7 +99,7 @@ class SettingsPage(GenericPage):
             f"""
             QLabel {{
                 font-family: {FONT_FAMILY};
-                font-size: 16px;
+                font-size: {DEFAULT_FONT_SIZE}px;
                 color: {COLORS['fg']};
                 font-weight: bold;
             }}
@@ -109,7 +114,7 @@ class SettingsPage(GenericPage):
             f"""
             QComboBox {{
                 font-family: {FONT_FAMILY};
-                font-size: 16px;
+                font-size: {DEFAULT_FONT_SIZE}px;
                 color: {COLORS['fg']};
                 background-color: {COLORS['bg_hard']};
                 border: 2px solid {COLORS['fg_faded']};
@@ -149,7 +154,7 @@ class SettingsPage(GenericPage):
             f"""
             QLabel {{
                 font-family: {FONT_FAMILY};
-                font-size: 16px;
+                font-size: {DEFAULT_FONT_SIZE}px;
                 color: {COLORS['fg']};
                 font-weight: bold;
             }}
@@ -164,7 +169,7 @@ class SettingsPage(GenericPage):
             f"""
             QLineEdit {{
                 font-family: {FONT_FAMILY};
-                font-size: 16px;
+                font-size: {DEFAULT_FONT_SIZE}px;
                 color: {COLORS['fg']};
                 background-color: {COLORS['bg_hard']};
                 border: 2px solid {COLORS['fg_faded']};
@@ -180,7 +185,12 @@ class SettingsPage(GenericPage):
 
         form_layout.addRow(api_key_label, self.api_key_input)
 
-        self.add_layout(form_layout)
+        # Wrap form layout in container with margins
+        form_widget = QWidget()
+        form_widget.setLayout(form_layout)
+        form_container.addWidget(form_widget)
+        
+        self.add_layout(form_container)
         self.add_stretch()
 
     def open_folder_dialog(self):

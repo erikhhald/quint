@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from .models import Base
 from .utilities import DATA_DIR
 
-DB_DIR = DATA_DIR + "/db"
+DB_DIR = DATA_DIR + "/data"
 
 
 class Database:

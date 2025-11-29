@@ -40,6 +40,7 @@ class Card(Base):
     id = Column(Integer, primary_key=True)
     deck_id = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    due = Column(DateTime, default=datetime.utcnow)  # When the card is due for review
 
     # File system tracking
     path = Column(String(500), nullable=False)  # Filepath to the card content
@@ -48,7 +49,6 @@ class Card(Base):
     is_external = Column(Boolean, default=False)
 
     # FSRS core scheduling parameters
-    due = Column(DateTime, default=datetime.utcnow)  # When the card is due for review
     stability = Column(Float, default=0.0)  # Memory stability (S)
     difficulty = Column(Float, default=0.0)  # Memory difficulty (D)
     elapsed_days = Column(Integer, default=0)  # Days since last review

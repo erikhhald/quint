@@ -8,7 +8,7 @@ from settings.settings import settings
 
 from .database import db
 from .models import Card, Deck
-from .utilities import write_to_managed_store
+from .file_store import save_file
 
 
 def get_today_end():
@@ -199,7 +199,8 @@ def create_card(file_path, deck_id, copy=True):
         except Exception as e:
             raise IOError(f"Failed to read file: {e}")
 
-        final_path = write_to_managed_store(data, deck.name, str(source_path))
+        filename = source_path.name
+        final_path = save_file(filename, data)
     else:
         # Use original path
         final_path = str(source_path)

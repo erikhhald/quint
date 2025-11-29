@@ -1,6 +1,5 @@
 import os
 import platform
-from pathlib import Path
 
 
 def get_data_dir():
@@ -33,42 +32,3 @@ def get_data_dir():
 
 
 DATA_DIR = get_data_dir()
-
-
-def write_to_managed_store(data, deck_name, original_path):
-    """
-    Write file data to the managed store under DATA_DIR/files/deck_name.
-
-    Args:
-        data: File data to write (bytes or string)
-        deck_name: Name of the deck for directory organization
-        original_path: Original file path to extract filename from
-
-    Returns:
-        str: Path to the written file in managed store
-    """
-    # Create the managed directory structure
-    files_dir = Path(DATA_DIR) / "files" / deck_name
-    files_dir.mkdir(parents=True, exist_ok=True)
-
-    # Extract filename from original path
-    original_file = Path(original_path)
-    filename = original_file.name
-
-    # Generate unique filename if needed
-    target_path = files_dir / filename
-    counter = 1
-    while target_path.exists():
-        stem = original_file.stem
-        suffix = original_file.suffix
-        filename = f"{stem}_{counter}{suffix}"
-        target_path = files_dir / filename
-        counter += 1
-
-    # Write the file data
-    if isinstance(data, str):
-        target_path.write_text(data, encoding="utf-8")
-    else:
-        target_path.write_bytes(data)
-
-    return str(target_path)
